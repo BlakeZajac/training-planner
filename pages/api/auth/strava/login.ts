@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        // Validate required environment variables
         if (!process.env.STRAVA_REDIRECT_URI || !process.env.STRAVA_CLIENT_ID) {
             throw new Error("Missing required Strava environment variables");
         }
