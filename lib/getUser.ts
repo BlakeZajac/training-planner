@@ -1,8 +1,7 @@
-import { NextApiRequest } from "next";
 import jwt from "jsonwebtoken";
 
-export function getUser(req: NextApiRequest) {
-    const cookie = req.headers.cookie;
+export function getUser() {
+    const cookie = document.cookie;
     if (!cookie) return null;
 
     const match = cookie.match(/session=([^;]+)/);
