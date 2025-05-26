@@ -1,16 +1,18 @@
-import jwt from "jsonwebtoken";
+import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "@/lib/useAuth";
 
-export function getUser() {
-    const cookie = document.cookie;
-    if (!cookie) return null;
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-    const match = cookie.match(/session=([^;]+)/);
-    if (!match) return null;
+export async function getUser() {
+    const auth = useAuth();
+    if (!auth) return null;
 
-    try {
-        return jwt.verify(match[1], process.env.JWT_SECRET!);
-    } catch (error) {
-        console.error(`Error verifying session token from cookie: ${error}`);
+    const { data, error } = await supabase.from("users").select("*").eq("id", auth.id).single();
+
+    if (error) {
+        console.error("Error fetching user data:", error);
         return null;
     }
+
+    return data;
 }

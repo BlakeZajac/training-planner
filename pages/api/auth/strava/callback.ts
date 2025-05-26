@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 import { serialize } from "cookie";
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -14,7 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const code = req.query.code;
         if (!code) {
-            throw new Error("No authorization code provided");
+            console.error("No authorisation code provided");
+            throw new Error("No authorisation code provided");
         }
 
         const client_id = process.env.STRAVA_CLIENT_ID;
@@ -45,6 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             throw new Error("Invalid response from Strava");
         }
 
+        console.log("Token exchange successful:", data);
         const { access_token, refresh_token, expires_at, athlete } = data;
 
         // Insert or update user in Supabase
@@ -64,11 +66,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             throw new Error("Failed to save user data");
         }
 
+        console.log("User upserted successfully");
+
         // Create a JWT token for the session
         const token = jwt.sign(
             {
                 id: athlete.id,
-                name: `${athlete.firstname} ${athlete.lastname}`,
+                username: athlete.username,
+                firstname: athlete.firstname,
+                lastname: athlete.lastname,
             },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
@@ -86,8 +92,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             })
         );
 
-        // Redirect to the dashboard
-        res.redirect("/dashboard");
+        console.log("Cookie set successfully");
+        res.redirect("/");
     } catch (error) {
         console.error("Error in Strava callback:", error);
         res.status(500).json({
